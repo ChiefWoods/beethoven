@@ -10,3 +10,7 @@ test-ledger/
 .factory
 AGENTS.md
 CLAUDE.md
+node_modules
+generated
+.env
+.cursor

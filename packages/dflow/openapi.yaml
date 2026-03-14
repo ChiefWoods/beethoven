@@ -1,0 +1,683 @@
+openapi: 3.1.0
+info:
+  title: DFlow Aggregator (Imperative Trading)
+  description: Best-effort OpenAPI spec for DFlow imperative trading endpoints.
+  version: 0.1.0
+  license:
+    name: BUSL-1.1
+servers:
+  - url: https://quote-api.dflow.net
+security:
+  - api_key: []
+tags:
+  - name: swap
+    description: Swap API endpoints
+paths:
+  /quote:
+    get:
+      tags: [swap]
+      summary: Returns a quote for an imperative swap
+      operationId: quoteGet
+      parameters:
+        - name: inputMint
+          in: query
+          required: true
+          description: Base58-encoded input mint address
+          schema:
+            type: string
+        - name: outputMint
+          in: query
+          required: true
+          description: Base58-encoded output mint address
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: true
+          description: Input amount as a scaled integer. For example, 1 SOL is 1000000000.
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: slippageBps
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/SlippageTolerance"
+        - name: priceImpactTolerancePct
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: dexes
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: excludeDexes
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: platformFeeBps
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: platformFeeMode
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/PlatformFeeMode"
+        - name: sponsoredSwap
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: sponsorExec
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: destinationSwap
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: onlyDirectRoutes
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: maxRouteLength
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - name: onlyJitRoutes
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: forJitoBundle
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Imperative swap quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuoteResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuoteBadRequestResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuoteInternalServerErrorResponse"
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuoteServiceUnavailableResponse"
+
+  /swap:
+    post:
+      tags: [swap]
+      summary: Returns an imperative swap transaction for the given quote
+      operationId: swapPost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwapRequest"
+      responses:
+        "200":
+          description: Imperative swap transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwapResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwapBadRequestResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwapInternalServerErrorResponse"
+
+  /swap-instructions:
+    post:
+      tags: [swap]
+      summary: Returns imperative swap instructions for the given quote
+      operationId: swapInstructionsPost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwapRequest"
+      responses:
+        "200":
+          description: Imperative swap instructions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwapInstructionsResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwapBadRequestResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwapInternalServerErrorResponse"
+
+components:
+  securitySchemes:
+    api_key:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API key for authentication. Contact hello@dflow.net to obtain an API key.
+  schemas:
+    SlippageTolerance:
+      oneOf:
+        - type: integer
+          format: int32
+          minimum: 0
+        - type: string
+          enum: [auto]
+    PlatformFeeMode:
+      type: string
+      enum: [outputMint, inputMint]
+    PriorityLevel:
+      type: string
+      enum: [medium, high, veryHigh]
+
+    QuoteResponse:
+      type: object
+      required:
+        - inputMint
+        - inAmount
+        - outputMint
+        - outAmount
+        - otherAmountThreshold
+        - minOutAmount
+        - slippageBps
+        - priceImpactPct
+        - routePlan
+        - contextSlot
+      properties:
+        contextSlot:
+          type: integer
+          format: int64
+          minimum: 0
+        forJitoBundle:
+          type: boolean
+        inAmount:
+          type: string
+        inputMint:
+          type: string
+        minOutAmount:
+          type: string
+        otherAmountThreshold:
+          type: string
+        outAmount:
+          type: string
+        outTransferFee:
+          type: string
+        outputMint:
+          type: string
+        platformFee:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/PlatformFee"
+        priceImpactPct:
+          type: string
+        requestId:
+          type: string
+        routePlan:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoutePlanLeg"
+        simulatedComputeUnits:
+          type: integer
+          format: int32
+          minimum: 0
+        slippageBps:
+          type: integer
+          format: int32
+          minimum: 0
+
+    SwapRequest:
+      type: object
+      required: [userPublicKey, quoteResponse]
+      properties:
+        userPublicKey:
+          type: string
+        quoteResponse:
+          $ref: "#/components/schemas/QuoteResponse"
+        computeUnitPriceMicroLamports:
+          type: integer
+          format: int64
+          minimum: 0
+        createFeeAccount:
+          $ref: "#/components/schemas/CreateFeeAccountParams"
+        destinationTokenAccount:
+          $ref: "#/components/schemas/DestinationTokenAccountParam"
+        dynamicComputeUnitLimit:
+          type: boolean
+        feeAccount:
+          type: string
+        includeJitoSandwichMitigationAccount:
+          $ref: "#/components/schemas/IncludeJitoSandwichMitigationAccount"
+        perLegSlippage:
+          type: boolean
+        positiveSlippage:
+          $ref: "#/components/schemas/PositiveSlippageParams"
+        prioritizationFeeLamports:
+          $ref: "#/components/schemas/PrioritizationFeeLamports"
+        sponsor:
+          type: string
+        sponsorExec:
+          type: boolean
+        wrapAndUnwrapSol:
+          type: boolean
+
+    SwapResponse:
+      type: object
+      required:
+        - swapTransaction
+        - lastValidBlockHeight
+        - prioritizationFeeLamports
+        - computeUnitLimit
+      properties:
+        swapTransaction:
+          type: string
+        lastValidBlockHeight:
+          type: integer
+          format: int64
+          minimum: 0
+        prioritizationFeeLamports:
+          type: integer
+          format: int64
+          minimum: 0
+        computeUnitLimit:
+          type: integer
+          format: int32
+          minimum: 0
+        prioritizationType:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/PrioritizationType"
+
+    SwapInstructionsResponse:
+      type: object
+      required:
+        - computeBudgetInstructions
+        - setupInstructions
+        - swapInstruction
+        - cleanupInstructions
+        - otherInstructions
+        - addressLookupTableAddresses
+        - prioritizationFeeLamports
+        - computeUnitLimit
+        - blockhashWithMetadata
+      properties:
+        computeBudgetInstructions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstructionResponse"
+        setupInstructions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstructionResponse"
+        swapInstruction:
+          $ref: "#/components/schemas/InstructionResponse"
+        cleanupInstructions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstructionResponse"
+        otherInstructions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstructionResponse"
+        addressLookupTableAddresses:
+          type: array
+          items:
+            type: string
+        prioritizationFeeLamports:
+          type: integer
+          format: int64
+          minimum: 0
+        computeUnitLimit:
+          type: integer
+          format: int32
+          minimum: 0
+        prioritizationType:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/PrioritizationType"
+        blockhashWithMetadata:
+          $ref: "#/components/schemas/BlockhashWithMetadata"
+
+    InstructionResponse:
+      type: object
+      required: [programId, accounts, data]
+      properties:
+        programId:
+          type: string
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountMetaResponse"
+        data:
+          type: string
+    AccountMetaResponse:
+      type: object
+      required: [pubkey, isSigner, isWritable]
+      properties:
+        pubkey:
+          type: string
+        isSigner:
+          type: boolean
+        isWritable:
+          type: boolean
+    BlockhashWithMetadata:
+      type: object
+      required: [blockhash, lastValidBlockHeight]
+      properties:
+        blockhash:
+          type: string
+        lastValidBlockHeight:
+          type: integer
+          format: int64
+          minimum: 0
+
+    CreateFeeAccountParams:
+      type: object
+      required: [referralAccount]
+      properties:
+        referralAccount:
+          type: string
+    DestinationTokenAccountParam:
+      oneOf:
+        - type: object
+          required: [associatedTokenAccount]
+          properties:
+            associatedTokenAccount:
+              type: object
+              required: [owner]
+              properties:
+                owner:
+                  type: string
+        - type: object
+          required: [address]
+          properties:
+            address:
+              type: string
+    IncludeJitoSandwichMitigationAccount:
+      oneOf:
+        - type: boolean
+        - type: string
+    PositiveSlippageParams:
+      type: object
+      required: [limitPct]
+      properties:
+        feeAccount:
+          type: string
+        limitPct:
+          type: integer
+          format: int32
+          minimum: 0
+    PrioritizationFeeLamports:
+      oneOf:
+        - type: object
+          required: [autoMultiplier]
+          properties:
+            autoMultiplier:
+              type: integer
+              format: int32
+              minimum: 0
+        - type: object
+          required: [priorityLevelWithMaxLamports]
+          properties:
+            priorityLevelWithMaxLamports:
+              type: object
+              required: [priorityLevel, maxLamports]
+              properties:
+                priorityLevel:
+                  $ref: "#/components/schemas/PriorityLevel"
+                maxLamports:
+                  type: integer
+                  format: int32
+                  minimum: 0
+        - type: string
+          enum: [auto]
+        - type: object
+          required: [lamports]
+          properties:
+            lamports:
+              type: integer
+              format: int32
+              minimum: 0
+        - type: string
+          enum: [disabled]
+    PrioritizationType:
+      oneOf:
+        - type: object
+          required: [computeBudget]
+          properties:
+            computeBudget:
+              type: object
+              required: [microLamports]
+              properties:
+                estimatedMicroLamports:
+                  type: [integer, "null"]
+                  format: int64
+                  minimum: 0
+                microLamports:
+                  type: integer
+                  format: int64
+                  minimum: 0
+
+    PlatformFee:
+      type: object
+      required: [amount, feeBps, segmenterFeeAmount, segmenterFeePct, feeAccount]
+      properties:
+        amount:
+          type: string
+        feeBps:
+          type: integer
+          format: int32
+          minimum: 0
+        segmenterFeeAmount:
+          type: string
+        segmenterFeePct:
+          type: integer
+          format: int32
+          minimum: 0
+        feeAccount:
+          type: string
+
+    RoutePlanLeg:
+      oneOf:
+        - $ref: "#/components/schemas/DynamicRoutePlanLeg"
+        - $ref: "#/components/schemas/SingleMarketRoutePlanLeg"
+    DynamicRoutePlanLeg:
+      type: object
+      required:
+        - venue
+        - marketKey
+        - data
+        - inputMint
+        - outputMint
+        - inAmount
+        - outAmount
+        - inputMintDecimals
+        - outputMintDecimals
+      properties:
+        venue:
+          type: string
+        marketKey:
+          type: string
+        data:
+          type: string
+        inputMint:
+          type: string
+        outputMint:
+          type: string
+        inAmount:
+          type: string
+        outAmount:
+          type: string
+        inputMintDecimals:
+          type: integer
+          format: int32
+          minimum: 0
+        outputMintDecimals:
+          type: integer
+          format: int32
+          minimum: 0
+    SingleMarketRoutePlanLeg:
+      type: object
+      required:
+        - venue
+        - marketKey
+        - inputMint
+        - outputMint
+        - inAmount
+        - outAmount
+        - inputMintDecimals
+        - outputMintDecimals
+      properties:
+        venue:
+          type: string
+        marketKey:
+          type: string
+        inputMint:
+          type: string
+        outputMint:
+          type: string
+        inAmount:
+          type: string
+        outAmount:
+          type: string
+        inputMintDecimals:
+          type: integer
+          format: int32
+          minimum: 0
+        outputMintDecimals:
+          type: integer
+          format: int32
+          minimum: 0
+
+    QuoteBadRequestResponse:
+      type: object
+      required: [msg, code]
+      properties:
+        msg:
+          type: string
+        code:
+          $ref: "#/components/schemas/QuoteBadRequestCode"
+    QuoteInternalServerErrorResponse:
+      type: object
+      required: [msg, code]
+      properties:
+        msg:
+          type: string
+        code:
+          $ref: "#/components/schemas/QuoteInternalServerErrorCode"
+    QuoteServiceUnavailableResponse:
+      type: object
+      required: [msg, code]
+      properties:
+        msg:
+          type: string
+        code:
+          $ref: "#/components/schemas/QuoteServiceUnavailableCode"
+    SwapBadRequestResponse:
+      type: object
+      required: [msg, code]
+      properties:
+        msg:
+          type: string
+        code:
+          $ref: "#/components/schemas/SwapBadRequestCode"
+    SwapInternalServerErrorResponse:
+      type: object
+      required: [msg, code]
+      properties:
+        msg:
+          type: string
+        code:
+          $ref: "#/components/schemas/SwapInternalServerErrorCode"
+
+    QuoteBadRequestCode:
+      type: string
+      enum:
+        - requested_input_amount_is_zero
+        - invalid_input_mint
+        - invalid_output_mint
+        - same_input_and_output_mint
+        - invalid_slippage_bps
+        - invalid_platform_fee_bps
+        - invalid_dex
+        - invalid_max_route_length_for_jit_route
+        - cannot_exclude_jit_router_for_jit_route
+        - route_not_found
+        - price_impact_too_high
+        - invalid_price_impact_tolerance_pct
+    QuoteInternalServerErrorCode:
+      type: string
+      enum: [failed_to_compute_route]
+    QuoteServiceUnavailableCode:
+      type: string
+      enum: [amm_map_not_initialized, amm_map_lagging]
+    SwapBadRequestCode:
+      type: string
+      enum:
+        - invalid_out_amount
+        - invalid_user_public_key
+        - invalid_sponsor
+        - sponsored_swap_cannot_create_fee_account
+        - invalid_platform_fee_amount
+        - invalid_fee_account
+        - invalid_positive_slippage_fee_account
+        - invalid_referral_account
+        - invalid_destination_token_account
+        - invalid_destination_token_account_for_native_sol
+        - both_priority_fee_params_specified
+        - route_is_empty
+        - route_too_long
+        - invalid_route_plan_leg
+        - invalid_jito_sandwich_mitigation_account
+    SwapInternalServerErrorCode:
+      type: string
+      enum: [failed_to_compute_swap]

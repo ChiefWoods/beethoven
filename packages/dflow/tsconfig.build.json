@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "noEmit": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist",
+    "noImplicitOverride": false,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["src/**/*.ts"]
+}

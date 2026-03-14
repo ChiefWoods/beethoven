@@ -1,0 +1,38 @@
+{
+  "name": "@blueshift/beethoven",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "exports": {
+    "./dflow": {
+      "types": "./packages/dflow/dist/index.d.mts",
+      "default": "./packages/dflow/dist/index.mjs"
+    },
+    "./metis": {
+      "types": "./packages/metis/dist/index.d.mts",
+      "default": "./packages/metis/dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "ci": "for d in packages/*; do if [ -f \"$d/package.json\" ]; then (cd \"$d\" && bun run ci); fi; done",
+    "metis": "bun run playground/metis.ts",
+    "dflow": "bun run playground/dflow.ts",
+    "titan": "bun run playground/titan.ts",
+    "kinetic": "bun run playground/kinetic.ts",
+    "okx": "bun run playground/okx.ts",
+    "carbium": "bun run playground/carbium.ts"
+  },
+  "devDependencies": {
+    "@okx-dex/okx-dex-sdk": "^1.0.18",
+    "@solana/web3.js": "^1.98.4",
+    "@titanexchange/sdk-ts": "^0.1.2",
+    "@types/bun": "latest",
+    "@types/node": "^25.5.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
