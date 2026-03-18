@@ -26,7 +26,9 @@ swap = [
     "scale_amm-swap",
     "scale_vmm-swap",
 ]
-
+route = [
+    "metis-route",
+]
 # Deposit protocols
 kamino-deposit = ["dep:beethoven-deposit-kamino"]
 jupiter-deposit = ["dep:beethoven-deposit-jupiter"]
@@ -43,6 +45,9 @@ futarchy-swap = ["dep:beethoven-swap-futarchy"]
 gamma-swap = ["dep:beethoven-swap-gamma"]
 scale_amm-swap = ["dep:beethoven-swap-scale-amm"]
 scale_vmm-swap = ["dep:beethoven-swap-scale-vmm"]
+
+# Route protocols
+metis-route = ["dep:beethoven-route-metis"]
 
 [dependencies]
 beethoven-core = { path = "crates/core" }
@@ -65,6 +70,7 @@ beethoven-swap-futarchy = { path = "crates/swap/futarchy", optional = true }
 beethoven-swap-gamma = { path = "crates/swap/gamma", optional = true }
 beethoven-swap-scale-amm = { path = "crates/swap/scale-amm", optional = true }
 beethoven-swap-scale-vmm = { path = "crates/swap/scale-vmm", optional = true }
+beethoven-route-metis = { path = "crates/route/metis", optional = true }
 
 [workspace]
 members = [
@@ -85,6 +91,7 @@ members = [
     "program-test",
     "crates/client",
     "anchor/dummy/programs/*",
+    "crates/route/metis",
 ]
 
 [dev-dependencies]
