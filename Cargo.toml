@@ -84,6 +84,7 @@ members = [
     "crates/swap/scale-vmm",
     "program-test",
     "crates/client",
+    "anchor/dummy/programs/*",
 ]
 
 [dev-dependencies]

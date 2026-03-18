@@ -1,0 +1,26 @@
+################################################################
+# Manage dummy deployment through Crypto Infrastructure as Code
+################################################################
+
+addon "svm" {
+    rpc_api_url = input.rpc_api_url
+    network_id = input.network_id
+}
+
+action "deploy_dummy" "svm::deploy_program" {
+    description = "Deploy dummy program"
+    program = svm::get_program_from_anchor_project("dummy") 
+    authority = signer.authority
+    payer = signer.payer
+    // Optional: if you want to deploy the program via a cheatcode when targeting a Surfnet, set `instant_surfnet_deployment = true`
+    // Deploying via a cheatcode will write the program data directly to the program account, rather than sending transactions.
+    // This will make deployments instantaneous, but is deviating from how the deployments will take place on devnet/mainnet.
+    instant_surfnet_deployment = true
+}
+
+action "stream_jupiter_accounts" "svm::setup_surfnet" {
+    stream_account {
+        public_key = "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"
+        include_owned_accounts = true
+    }
+}
